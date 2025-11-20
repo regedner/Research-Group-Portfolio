@@ -75,7 +75,7 @@ npm run dev
 
 ---
 
-## 🖼️ Screenshots (Optional)
+## 🖼️ Screenshots
 ![1](https://github.com/user-attachments/assets/a7479765-a315-478f-a14a-134b85cce2d3)
 ![2](https://github.com/user-attachments/assets/e413796e-c330-4d07-a385-ae61da6136e4)
 ![3](https://github.com/user-attachments/assets/9f86f953-bdf9-4616-95d2-a3b0a8beedf5)
