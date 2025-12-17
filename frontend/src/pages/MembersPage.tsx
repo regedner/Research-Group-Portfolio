@@ -9,6 +9,7 @@ function MembersPage() {
   const [sourceId, setSourceId] = useState('');
   const [providerType, setProviderType] = useState('openalex');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isFetchingMember, setIsFetchingMember] = useState(false);
 
   const { data: members, isLoading, error, refetch } = useQuery<MemberPageData, Error>({
     queryKey: ['members'],
@@ -31,6 +32,7 @@ function MembersPage() {
   }
 
   const handleFetchMember = async () => {
+    setIsFetchingMember(true);
     try {
       await fetchNewMember(sourceId, providerType);
       refetch();
@@ -38,6 +40,8 @@ function MembersPage() {
       setShowAddForm(false);
     } catch (err) {
       console.error('Error fetching member:', err);
+    } finally {
+      setIsFetchingMember(false);
     }
   };
 
@@ -96,15 +100,21 @@ function MembersPage() {
             <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200">
               <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Add New Member</h3>
               <div className="flex flex-col gap-3 sm:gap-4">
-                <input
-                  type="text"
-                  placeholder="Enter Source ID"
-                  value={sourceId}
-                  onChange={(e) => setSourceId(e.target.value)}
-                  className="w-full px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm sm:text-base"
-                />
+                <div>
+                  <label htmlFor="source-id" className="sr-only">Source ID</label>
+                  <input
+                    id="source-id"
+                    type="text"
+                    placeholder="Enter Source ID"
+                    value={sourceId}
+                    onChange={(e) => setSourceId(e.target.value)}
+                    className="w-full px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm sm:text-base"
+                  />
+                </div>
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                  <label htmlFor="provider-type" className="sr-only">Provider Type</label>
                   <select
+                    id="provider-type"
                     value={providerType}
                     onChange={(e) => setProviderType(e.target.value)}
                     className="w-full sm:flex-1 px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm sm:text-base"
@@ -114,10 +124,17 @@ function MembersPage() {
                   </select>
                   <button
                     onClick={handleFetchMember}
-                    disabled={!sourceId}
-                    className="w-full sm:w-auto px-6 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium whitespace-nowrap text-sm sm:text-base"
+                    disabled={!sourceId || isFetchingMember}
+                    className="w-full sm:w-auto px-6 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium whitespace-nowrap text-sm sm:text-base flex items-center justify-center gap-2"
                   >
-                    Fetch Member
+                    {isFetchingMember ? (
+                      <>
+                        <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Fetching...</span>
+                      </>
+                    ) : (
+                      'Fetch Member'
+                    )}
                   </button>
                 </div>
               </div>
