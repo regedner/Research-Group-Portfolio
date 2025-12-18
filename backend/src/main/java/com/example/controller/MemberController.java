@@ -92,11 +92,7 @@ public class MemberController {
         }
 
         // Dosya validasyonu (sadece görüntü dosyaları)
-        String contentType = file.getContentType();
-        if (!contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
-            logger.error("Invalid file type for member ID: {}. Only JPEG/PNG allowed.", id);
-            return ResponseEntity.badRequest().body(null);
-        }
+        // Güvenlik: Content-Type header'ına güvenme, magic bytes kontrolü yap.
 
         // Dosya boyutu kontrolü (örneğin, 5MB sınırı)
         if (file.getSize() > 5 * 1024 * 1024) {
@@ -104,9 +100,33 @@ public class MemberController {
             return ResponseEntity.badRequest().body(null);
         }
 
+        String detectedExtension = null;
+        try (java.io.InputStream is = file.getInputStream()) {
+            byte[] header = new byte[8];
+            int read = is.read(header);
+            if (read >= 2 && header[0] == (byte) 0xFF && header[1] == (byte) 0xD8) {
+                detectedExtension = ".jpg";
+            } else if (read >= 8 &&
+                       header[0] == (byte) 0x89 && header[1] == (byte) 0x50 &&
+                       header[2] == (byte) 0x4E && header[3] == (byte) 0x47 &&
+                       header[4] == (byte) 0x0D && header[5] == (byte) 0x0A &&
+                       header[6] == (byte) 0x1A && header[7] == (byte) 0x0A) {
+                detectedExtension = ".png";
+            }
+        } catch (IOException e) {
+            logger.error("Failed to read file for member ID: {}", id);
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        if (detectedExtension == null) {
+            logger.error("Invalid file content for member ID: {}. Only JPEG/PNG allowed (Magic bytes check).", id);
+            return ResponseEntity.badRequest().body(null);
+        }
+
         try {
-            // Benzersiz dosya adı oluştur
-            String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+            // Benzersiz dosya adı oluştur (UUID + tespit edilen güvenli uzantı)
+            // Kullanıcının verdiği dosya adını kullanma (path traversal ve uzantı kandırmacası riski)
+            String fileName = UUID.randomUUID().toString() + "_" + "profile" + detectedExtension;
             Path filePath = Paths.get(UPLOAD_DIR + fileName);
             Files.write(filePath, file.getBytes());
             logger.info("File uploaded successfully: {}", filePath);
