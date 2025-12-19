@@ -143,6 +143,7 @@ function MembersPage() {
                         <img
                           src={`http://localhost:8080/uploads/${member.photoPath}`}
                           alt={member.name}
+                          loading="lazy"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
