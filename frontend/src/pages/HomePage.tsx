@@ -1,5 +1,4 @@
 import { Typography, Box, Button, Container } from '@mui/material';
-import { LinkedIn, Twitter, Mail, Public } from '@mui/icons-material';
 import { ArrowRightIcon, AcademicCapIcon, BoltIcon, LinkIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import ScrollAnimation from '../components/ScrollAnimation'; 
