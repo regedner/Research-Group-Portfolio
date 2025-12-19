@@ -9,6 +9,8 @@ function MembersPage() {
   const [sourceId, setSourceId] = useState('');
   const [providerType, setProviderType] = useState('openalex');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isAddingMember, setIsAddingMember] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   const { data: members, isLoading, error, refetch } = useQuery<MemberPageData, Error>({
     queryKey: ['members'],
@@ -31,13 +33,23 @@ function MembersPage() {
   }
 
   const handleFetchMember = async () => {
+    setIsAddingMember(true);
+    setFeedbackMessage(null);
     try {
       await fetchNewMember(sourceId, providerType);
-      refetch();
+      await refetch();
       setSourceId('');
-      setShowAddForm(false);
+      setFeedbackMessage({ type: 'success', text: 'Member added successfully!' });
+      // Clear success message after 3 seconds
+      setTimeout(() => setFeedbackMessage(null), 3000);
     } catch (err) {
       console.error('Error fetching member:', err);
+      setFeedbackMessage({
+        type: 'error',
+        text: 'Failed to add member. Please check the Source ID and try again.'
+      });
+    } finally {
+      setIsAddingMember(false);
     }
   };
 
@@ -98,28 +110,44 @@ function MembersPage() {
               <div className="flex flex-col gap-3 sm:gap-4">
                 <input
                   type="text"
+                  aria-label="Source ID"
                   placeholder="Enter Source ID"
                   value={sourceId}
                   onChange={(e) => setSourceId(e.target.value)}
-                  className="w-full px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm sm:text-base"
+                  disabled={isAddingMember}
+                  className="w-full px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm sm:text-base disabled:bg-gray-100 disabled:text-gray-500"
                 />
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <select
+                    aria-label="Provider Type"
                     value={providerType}
                     onChange={(e) => setProviderType(e.target.value)}
-                    className="w-full sm:flex-1 px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm sm:text-base"
+                    disabled={isAddingMember}
+                    className="w-full sm:flex-1 px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm sm:text-base disabled:bg-gray-100 disabled:text-gray-500"
                   >
                     <option value="openalex">OpenAlex</option>
                     <option value="serpapi">SerpAPI</option>
                   </select>
                   <button
                     onClick={handleFetchMember}
-                    disabled={!sourceId}
-                    className="w-full sm:w-auto px-6 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium whitespace-nowrap text-sm sm:text-base"
+                    disabled={!sourceId || isAddingMember}
+                    className="w-full sm:w-auto px-6 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium whitespace-nowrap text-sm sm:text-base flex items-center justify-center gap-2"
                   >
-                    Fetch Member
+                    {isAddingMember ? (
+                      <>
+                        <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Fetching...</span>
+                      </>
+                    ) : (
+                      'Fetch Member'
+                    )}
                   </button>
                 </div>
+                {feedbackMessage && (
+                  <div className={`text-sm sm:text-base font-medium ${feedbackMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                    {feedbackMessage.text}
+                  </div>
+                )}
               </div>
             </div>
           </div>
