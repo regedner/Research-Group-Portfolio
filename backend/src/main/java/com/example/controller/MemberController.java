@@ -106,13 +106,23 @@ public class MemberController {
 
         try {
             // Benzersiz dosya adı oluştur
-            String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-            Path filePath = Paths.get(UPLOAD_DIR + fileName);
+            String originalFilename = file.getOriginalFilename();
+            String safeFilename = UUID.randomUUID().toString() + "_" +
+                (originalFilename != null ? originalFilename.replaceAll("[^a-zA-Z0-9.-]", "_") : "unknown.png");
+
+            Path filePath = Paths.get(UPLOAD_DIR + safeFilename).normalize();
+
+            // Güvenlik kontrolü: Dosya yolunun UPLOAD_DIR dışına çıkmadığından emin ol
+            if (!filePath.startsWith(UPLOAD_DIR)) {
+                logger.error("Security violation: Attempt to write outside upload directory");
+                return ResponseEntity.badRequest().build();
+            }
+
             Files.write(filePath, file.getBytes());
             logger.info("File uploaded successfully: {}", filePath);
 
             // Üye bilgisini güncelle
-            Member updatedMember = memberService.updateMemberPhoto(id, fileName);
+            Member updatedMember = memberService.updateMemberPhoto(id, safeFilename);
             return ResponseEntity.ok(updatedMember);
         } catch (IOException e) {
             logger.error("Failed to upload file for member ID: {}: {}", id, e.getMessage());
