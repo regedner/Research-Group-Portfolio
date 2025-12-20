@@ -44,6 +44,8 @@ The frontend is built with React & TypeScript, while the backend uses Spring Boo
 ### 1. Backend (Spring Boot)
 ```bash
 cd backend
+# Set the SERPAPI_API_KEY environment variable (optional, for fetching data from SerpApi)
+export SERPAPI_API_KEY=your_api_key_here
 ./mvnw spring-boot:run
 ```
 - The app runs at `http://localhost:8080`  
