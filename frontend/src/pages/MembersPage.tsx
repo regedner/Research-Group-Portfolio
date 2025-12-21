@@ -132,7 +132,8 @@ function MembersPage() {
           {members?.content && members.content.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
               {members.content.map((member, index: number) => (
-                <ScrollAnimation key={member.id} animationType="fade-up" delay={index * 150}>
+                // Use modulo 3 for delay to prevent excessive wait times on large lists while maintaining a staggered effect
+                <ScrollAnimation key={member.id} animationType="fade-up" delay={(index % 3) * 150}>
                   <Link
                     to={`/members/${member.id}`}
                     className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 block h-full"
@@ -143,6 +144,7 @@ function MembersPage() {
                         <img
                           src={`http://localhost:8080/uploads/${member.photoPath}`}
                           alt={member.name}
+                          loading="lazy"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
