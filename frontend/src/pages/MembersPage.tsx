@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { UserPlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { UserPlusIcon, XMarkIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { fetchMembers, fetchNewMember } from '../services/api';
 import ScrollAnimation from '../components/ScrollAnimation';
 
@@ -9,6 +9,7 @@ function MembersPage() {
   const [sourceId, setSourceId] = useState('');
   const [providerType, setProviderType] = useState('openalex');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
 
   const { data: members, isLoading, error, refetch } = useQuery<MemberPageData, Error>({
     queryKey: ['members'],
@@ -31,13 +32,16 @@ function MembersPage() {
   }
 
   const handleFetchMember = async () => {
+    setIsFetching(true);
     try {
       await fetchNewMember(sourceId, providerType);
-      refetch();
+      await refetch();
       setSourceId('');
       setShowAddForm(false);
     } catch (err) {
       console.error('Error fetching member:', err);
+    } finally {
+      setIsFetching(false);
     }
   };
 
@@ -99,6 +103,7 @@ function MembersPage() {
                 <input
                   type="text"
                   placeholder="Enter Source ID"
+                  aria-label="Source ID"
                   value={sourceId}
                   onChange={(e) => setSourceId(e.target.value)}
                   className="w-full px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm sm:text-base"
@@ -106,6 +111,7 @@ function MembersPage() {
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <select
                     value={providerType}
+                    aria-label="Provider Type"
                     onChange={(e) => setProviderType(e.target.value)}
                     className="w-full sm:flex-1 px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm sm:text-base"
                   >
@@ -114,10 +120,17 @@ function MembersPage() {
                   </select>
                   <button
                     onClick={handleFetchMember}
-                    disabled={!sourceId}
-                    className="w-full sm:w-auto px-6 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium whitespace-nowrap text-sm sm:text-base"
+                    disabled={!sourceId || isFetching}
+                    className="w-full sm:w-auto px-6 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium whitespace-nowrap text-sm sm:text-base flex items-center justify-center gap-2"
                   >
-                    Fetch Member
+                    {isFetching ? (
+                      <>
+                        <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                        <span>Fetching...</span>
+                      </>
+                    ) : (
+                      <span>Fetch Member</span>
+                    )}
                   </button>
                 </div>
               </div>
