@@ -9,6 +9,7 @@ function MembersPage() {
   const [sourceId, setSourceId] = useState('');
   const [providerType, setProviderType] = useState('openalex');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isFetchingMember, setIsFetchingMember] = useState(false);
 
   const { data: members, isLoading, error, refetch } = useQuery<MemberPageData, Error>({
     queryKey: ['members'],
@@ -31,6 +32,8 @@ function MembersPage() {
   }
 
   const handleFetchMember = async () => {
+    if (!sourceId) return;
+    setIsFetchingMember(true);
     try {
       await fetchNewMember(sourceId, providerType);
       refetch();
@@ -38,6 +41,8 @@ function MembersPage() {
       setShowAddForm(false);
     } catch (err) {
       console.error('Error fetching member:', err);
+    } finally {
+      setIsFetchingMember(false);
     }
   };
 
@@ -99,6 +104,7 @@ function MembersPage() {
                 <input
                   type="text"
                   placeholder="Enter Source ID"
+                  aria-label="Source ID"
                   value={sourceId}
                   onChange={(e) => setSourceId(e.target.value)}
                   className="w-full px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm sm:text-base"
@@ -107,6 +113,7 @@ function MembersPage() {
                   <select
                     value={providerType}
                     onChange={(e) => setProviderType(e.target.value)}
+                    aria-label="Provider Type"
                     className="w-full sm:flex-1 px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm sm:text-base"
                   >
                     <option value="openalex">OpenAlex</option>
@@ -114,10 +121,17 @@ function MembersPage() {
                   </select>
                   <button
                     onClick={handleFetchMember}
-                    disabled={!sourceId}
-                    className="w-full sm:w-auto px-6 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium whitespace-nowrap text-sm sm:text-base"
+                    disabled={!sourceId || isFetchingMember}
+                    className="w-full sm:w-auto px-6 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium whitespace-nowrap text-sm sm:text-base flex items-center justify-center gap-2"
                   >
-                    Fetch Member
+                    {isFetchingMember ? (
+                      <>
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        <span>Fetching...</span>
+                      </>
+                    ) : (
+                      'Fetch Member'
+                    )}
                   </button>
                 </div>
               </div>
